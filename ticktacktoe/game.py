@@ -1,27 +1,39 @@
 class Game:
-    def __init__(self, setup: str = " " * 9) -> None:
-        self.data: str = setup
-        self.data2: list[list]
-
-    def __str__(self) -> str:
-        pass
+    def __init__(self, setup=b'         ') -> None:
+        self.state = setup
 
     def __len__(self) -> int:
-        return sum(i != " " for i in self.data)
-        return sum(i != " " for j in self.data2 for i in j)
-        return 9 - ("".join(self.data2)).count(" ")
+        return 9 - self.state.count(' ')
 
     def __getitem__(self, *index: int):
         if len(index) == 1:
-            return self.game[index]
+            return self.state[index[0]]
         if len(index) == 2:
-            return self.game[index[0] + index[1] * 3]
+            return self.state[index[0] + index[1] * 3]
         raise IndexError
 
-    def value(self) -> bool:
-        if len(self) >= 5:
-            h = any("xxx" == self.data[i : i + 3 : 3] for i in range(3))
-            v = any("xxx" == self.data[i::3] for i in range(3))
-            d = "xxx" == self.data[::4] or "xxx" == self.data[2:-2:2]
-            return h or v or d
-        return False
+    def value(self):
+        if len(self) < 5:  # optimization: turn 5: round 3
+            return 0
+        _ = self.state
+        _ = _[:3], _[3:6], _[6:], _[::3], _[1::3], _[2::3], _[::4], _[2:-2:2]
+        if b'xxx' in _:
+            return 1
+        return -(b'ooo' in _)
+
+    @property
+    def state(self):
+        return self.__state
+
+    @state.setter
+    def state(self, _):
+        if isinstance(_, bytes) and len(_) == 9:
+            self.__state = _
+        elif isinstance(_, str) and len(_) == 9:
+            self.__state = _.encode()
+        else:
+            raise ValueError
+
+    @state.deleter
+    def state(self):
+        self.__state = b'         '
